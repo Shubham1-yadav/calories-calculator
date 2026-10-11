@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalorieCalc – Daily Calorie Calculator</title>
+<style>
+  /* Basic reset and page settings */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #ffffff;
+    color: #222222;
+    line-height: 1.6;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  header { border-bottom: 1px solid #e3e3e3; padding: 14px 0; }
+  header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .logo { font-size: 22px; font-weight: bold; color: #2e7d32; }
+  .tagline { font-size: 13px; color: #666666; }
+  nav a { color: #222222; text-decoration: none; margin-left: 20px; font-size: 15px; }
+  nav a:hover { color: #2e7d32; }
+
+  /* Hero */
+  .hero { padding: 70px 0 50px; }
+  .hero h1 { font-size: 38px; line-height: 1.2; margin-bottom: 14px; max-width: 560px; }
+  .hero p { color: #555555; max-width: 520px; margin-bottom: 26px; }
+
+  /* Buttons */
+  button, .btn {
+    font-size: 16px; padding: 12px 26px; border-radius: 8px;
+    border: 1px solid #2e7d32; cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .btn-main { background: #2e7d32; color: #ffffff; }
+  .btn-main:hover { background: #256528; }
+  .btn-light { background: #ffffff; color: #2e7d32; }
+  .btn-light:hover { background: #f0f7f0; }
+
+  /* Cards */
+  .card {
+    background: #ffffff; border: 1px solid #e3e3e3; border-radius: 12px;
+    padding: 28px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  section { padding: 30px 0; }
+  h2 { font-size: 26px; margin-bottom: 18px; }
+
+  /* Form */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .field { display: flex; flex-direction: column; }
+  .field.full { grid-column: 1 / 3; }
+  label, .label { font-size: 14px; font-weight: bold; margin-bottom: 6px; }
+  input[type="number"], select {
+    padding: 11px; font-size: 16px; border: 1px solid #bbbbbb; border-radius: 8px; background: #ffffff;
+  }
+  input:focus, select:focus { outline: 2px solid #2e7d32; border-color: #2e7d32; }
+  .radio-row label { font-weight: normal; margin-right: 24px; font-size: 16px; }
+  .buttons { margin-top: 24px; display: flex; gap: 12px; }
+  .buttons .btn-main { flex: 1; }
+  .error { color: #b00020; margin-top: 16px; min-height: 22px; font-size: 15px; }
+
+  /* Results */
+  #results { display: none; margin-top: 24px; }
+  .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+  .summary div { background: #f6f6f6; border-radius: 8px; padding: 14px; }
+  .summary span { font-size: 13px; color: #666666; display: block; }
+  .summary strong { font-size: 22px; }
+  .recommended { border-left: 4px solid #2e7d32; padding: 6px 0 6px 16px; margin-bottom: 22px; }
+  .recommended strong { font-size: 30px; color: #2e7d32; }
+  .goal-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .goal-card { border: 1px solid #e3e3e3; border-radius: 10px; padding: 16px; text-align: center; }
+  .goal-card:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+  .goal-card .value { font-size: 22px; font-weight: bold; }
+  .goal-card.selected { border: 2px solid #2e7d32; background: #f0f7f0; }
+
+  /* Simple bar indicator (CSS only) */
+  .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 26px; }
+  .bar div { flex: 1; background: #c8e6c9; }
+  .bar div:nth-child(2) { background: #81c784; }
+  .bar div:nth-child(3) { background: #2e7d32; }
+  .bar-labels { display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; }
+
+  /* About and footer */
+  .disclaimer { font-size: 14px; color: #666666; margin-top: 12px; }
+  footer { border-top: 1px solid #e3e3e3; margin-top: 40px; padding: 22px 0; text-align: center; font-size: 14px; color: #666666; }
+
+  /* Small screens: stack everything */
+  @media (max-width: 650px) {
+    .hero h1 { font-size: 30px; }
+    .form-grid, .summary, .goal-cards { grid-template-columns: 1fr; }
+    .field.full { grid-column: 1; }
+    .buttons { flex-direction: column; }
+    nav a { margin: 0 14px 0 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="home">
+  <div class="container">
+    <div>
+      <div class="logo">🔥 CalorieCalculator</div>
+      <div class="tagline">Understand your calories. Understand your goals.</div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="container">
+    <h1>Calculate Your Daily Calorie Needs</h1>
+    <p>Find out approximately how many calories your body needs each day based on your age, gender, height, weight and activity level.</p>
+    <a href="#calculator" class="btn btn-main">Calculate Now</a>
+  </div>
+</div>
+
+<!-- CALCULATOR -->
+<section id="calculator">
+  <div class="container">
+    <div class="card">
+      <h2>Daily Calorie Calculator</h2>
+
+      <div class="form-grid">
+        <div class="field full">
+          <span class="label">Gender</span>
+          <div class="radio-row">
+            <label><input type="radio" name="gender" value="male"> Male</label>
+            <label><input type="radio" name="gender" value="female"> Female</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="age">Age (years)</label>
+          <input type="number" id="age" placeholder="e.g. 20">
+        </div>
+
+        <div class="field">
+          <label for="weight">Weight (kg)</label>
+          <input type="number" id="weight" placeholder="e.g. 65">
+        </div>
+
+        <div class="field">
+          <label for="height">Height (cm)</label>
+          <input type="number" id="height" placeholder="e.g. 170">
+        </div>
+
+        <div class="field">
+          <label for="activity">Activity Level</label>
+          <select id="activity">
+            <option value="1.2">Sedentary – Little or no exercise</option>
+            <option value="1.375">Lightly Active – Exercise 1–3 days/week</option>
+            <option value="1.55">Moderately Active – Exercise 3–5 days/week</option>
+            <option value="1.725">Very Active – Exercise 6–7 days/week</option>
+            <option value="1.9">Extremely Active – Hard exercise or physical job</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label for="goal">Goal</label>
+          <select id="goal">
+            <option value="maintain">Maintain Weight</option>
+            <option value="lose">Lose Weight</option>
+            <option value="gain">Gain Weight</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn-main" onclick="calculateCalories()">Calculate Calories</button>
+        <button class="btn-light" onclick="resetForm()">Reset</button>
+      </div>
+
+      <p class="error" id="error"></p>
+    </div>
+
+    <!-- RESULTS (hidden until the user calculates) -->
+    <div class="card" id="results">
+      <h2>📊 Your Results</h2>
+
+      <div class="summary">
+        <div><span>BMR</span><strong id="bmrText"></strong></div>
+        <div><span>Daily Maintenance Calories</span><strong id="tdeeText"></strong></div>
+      </div>
+
+      <div class="recommended">
+        <span>Recommended Calories for Your Goal</span><br>
+        <strong id="goalText"></strong>
+      </div>
+
+      <div class="goal-cards">
+        <div class="goal-card" id="loseCard">
+          <div>🔥 Weight Loss</div>
+          <div class="value" id="loseText"></div>
+        </div>
+        <div class="goal-card" id="maintainCard">
+          <div>⚖️ Maintain Weight</div>
+          <div class="value" id="maintainText"></div>
+        </div>
+        <div class="goal-card" id="gainCard">
+          <div>💪 Weight Gain</div>
+          <div class="value" id="gainText"></div>
+        </div>
+      </div>
+
+      <div class="bar"><div></div><div></div><div></div></div>
+      <div class="bar-labels">
+        <span id="barLose"></span>
+        <span id="barMaintain"></span>
+        <span id="barGain"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <h2>About CalorieCalc</h2>
+    <p>CalorieCalc is a simple educational calorie calculator that estimates your Basal Metabolic Rate (BMR) and daily calorie needs using the Mifflin-St Jeor equation and activity level.</p>
+    <p class="disclaimer">These calculations are estimates for educational purposes and should not be considered medical advice.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 CalorieCalc | Ganesh Web For college Project</p>
+  <p>Made using HTML, CSS &amp; JavaScript</p>
+</footer>
+
+<script>
+  // Shows a number with commas, e.g. 2150 becomes "2,150 kcal/day"
+  function showKcal(number) {
+    return number.toLocaleString() + " kcal/day";
+  }
+
+  function calculateCalories() {
+    // 1. Get values from the form
+    var genderChoice = document.querySelector('input[name="gender"]:checked');
+    var age = document.getElementById("age").value;
+    var weight = document.getElementById("weight").value;
+    var height = document.getElementById("height").value;
+    var activity = Number(document.getElementById("activity").value);
+    var goal = document.getElementById("goal").value;
+    var error = document.getElementById("error");
+
+    // 2. Validate the values (show the message inside the calculator)
+    if (genderChoice === null) {
+      error.innerText = "Please select your gender.";
+      return;
+    }
+    if (age === "" || Number(age) < 15 || Number(age) > 100) {
+      error.innerText = "Please enter a valid age (15 to 100).";
+      return;
+    }
+    if (weight === "" || Number(weight) <= 20) {
+      error.innerText = "Please enter a valid weight (more than 20 kg).";
+      return;
+    }
+    if (height === "" || Number(height) < 100 || Number(height) > 250) {
+      error.innerText = "Please enter a valid height (100 to 250 cm).";
+      return;
+    }
+
+    // Everything is valid, so clear any old error
+    error.innerText = "";
+
+    // Convert the text values to numbers
+    var gender = genderChoice.value;
+    age = Number(age);
+    weight = Number(weight);
+    height = Number(height);
+
+    // 3. BMR using the Mifflin-St Jeor equation
+    var bmr;
+    if (gender === "male") {
+      bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+    } else {
+      bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+    }
+
+    // 4. TDEE = BMR x activity multiplier
+    var tdee = bmr * activity;
+
+    // 5. Calories for each goal (rounded to whole numbers)
+    var weightLossCalories = Math.round(tdee - 500);
+    var maintenanceCalories = Math.round(tdee);
+    var weightGainCalories = Math.round(tdee + 500);
+    bmr = Math.round(bmr);
+
+    // 6. Show the results on the page
+    document.getElementById("bmrText").innerText = showKcal(bmr);
+    document.getElementById("tdeeText").innerText = showKcal(maintenanceCalories);
+    document.getElementById("loseText").innerText = showKcal(weightLossCalories);
+    document.getElementById("maintainText").innerText = showKcal(maintenanceCalories);
+    document.getElementById("gainText").innerText = showKcal(weightGainCalories);
+
+    document.getElementById("barLose").innerText = weightLossCalories.toLocaleString() + " kcal";
+    document.getElementById("barMaintain").innerText = maintenanceCalories.toLocaleString() + " kcal";
+    document.getElementById("barGain").innerText = weightGainCalories.toLocaleString() + " kcal";
+
+    // Remove the highlight from all cards, then highlight the chosen goal
+    document.getElementById("loseCard").className = "goal-card";
+    document.getElementById("maintainCard").className = "goal-card";
+    document.getElementById("gainCard").className = "goal-card";
+
+    if (goal === "lose") {
+      document.getElementById("goalText").innerText = showKcal(weightLossCalories);
+      document.getElementById("loseCard").className = "goal-card selected";
+    } else if (goal === "gain") {
+      document.getElementById("goalText").innerText = showKcal(weightGainCalories);
+      document.getElementById("gainCard").className = "goal-card selected";
+    } else {
+      document.getElementById("goalText").innerText = showKcal(maintenanceCalories);
+      document.getElementById("maintainCard").className = "goal-card selected";
+    }
+
+    // Make the hidden results card visible
+    document.getElementById("results").style.display = "block";
+  }
+
+  function resetForm() {
+    // Clear the inputs
+    var radios = document.getElementsByName("gender");
+    radios[0].checked = false;
+    radios[1].checked = false;
+    document.getElementById("age").value = "";
+    document.getElementById("weight").value = "";
+    document.getElementById("height").value = "";
+    document.getElementById("activity").selectedIndex = 0;
+    document.getElementById("goal").selectedIndex = 0;
+
+    // Remove the error and hide the results
+    document.getElementById("error").innerText = "";
+    document.getElementById("results").style.display = "none";
+  }
+</script>
+
+</body>
+</html>
